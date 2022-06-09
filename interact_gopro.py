@@ -1,6 +1,5 @@
-""" The same code of rgb_event_recording but recording using go pro directly """
+""" Manage video recording from event and go-pro camera """
 
-import time
 import argparse
 import os
 import subprocess
@@ -23,32 +22,42 @@ if __name__ == '__main__':
                         help="None for live strem from event camera, path to the a video otherwise")
     # 'C:/Users/chiar/PycharmProjects/Microexpressions/samples/monitoring_40_50hz.raw'
 
-    parser.add_argument("--user", dest="user", default=None, help="user id")  # ...
-    parser.add_argument("--event_dataset_path", dest="edp", default=None, help="None if the event videos are stored in "
-                                                                               "this folder, path to the dataset folder"
-                                                                               "otherwise")
+    parser.add_argument("--user", dest="user", default='user', help="user id")
+
+    parser.add_argument("--event_dataset_path", dest="edp", default=None,
+                        help="None if the event videos are stored in this folder, path to the dataset folder otherwise")
+    parser.add_argument("--dataset_path", dest="dp", default=None,
+                        help="path to the dataset folder otherwise")
+    # parser.add_argument("--gopro_dataset_path", dest="gdp", default=None,
+    #                     help="None if the gopro videos are stored in this folder,
+    #                     path to the dataset folder otherwise")
 
     args = parser.parse_args()
 
     # Paths
-    # rgb_records_path = './records/rgb'  # here we store the user reaction from the rgb cam
-    # if not os.path.exists(rgb_records_path):
-    #     os.makedirs(rgb_records_path)
+    # if args.gdp is not None:
+    #     gopro_records_path = './records/rgb/' + 'user_' + args.user
+    # else:
+    #     gopro_records_path = args.dp + '/gopro_videos/' + 'user_' + args.user  # .../gopro_videos/user1
+    #
+    # if not os.path.exists(gopro_records_path):
+    #     print("Go pro record path")
+    #     os.makedirs(gopro_records_path)
 
-    if args.edp is None:
-        event_records_path = './records/event'  # here we have the user reaction from the event cam
+    if args.edp is not None:
+        event_records_path = './records/event/' + 'user_' + args.user
     else:
-        event_records_path = args.edp + '/event'
+        print("Event videos path")
+        event_records_path = args.dp + '/event_videos/original/' + 'user_' + args.user
+        # .../event_videos/original/user1
 
     if not os.path.exists(event_records_path):
         os.makedirs(event_records_path)
 
     # event camera
     player = "metavision_player"
-    if args.user is not None:
-        out_name = event_records_path + '/' + args.user
-    else:
-        out_name = event_records_path + '/user'
+    out_name = event_records_path + '/' + 'user' + args.user  # ./records/event/user_01/user1-timestamp.raw
+    print("out name: ", out_name)
 
     # GoPro camera
     goproCamera = GoProCamera.GoPro(constants.gpcontrol)
@@ -76,3 +85,22 @@ if __name__ == '__main__':
             except:
                 break  # if user pressed a key other than the given key the loop will break ...
 
+    # Download videos (this waste go pro battery)
+    # medialist = goproCamera.listMedia(format=True, media_array=True)
+
+    # count = 0
+    # for media in medialist:
+    #     if "MP4" in media[1]:
+    #         # newpath = gopro_records_path + "/" + media[1]
+    #         if count < 10:
+    #             newpath = gopro_records_path + "/" + str(0) + str(count)
+    #         else:
+    #             newpath = gopro_records_path + "/" + str(count)
+    #
+    #         goproCamera.downloadMedia(media[0], media[1], newpath)
+    #         count += 1
+
+    # Delete videos from the go pro
+    # goproCamera.delete('all')
+
+    # Ex: python interact_gopro.py --user 00 --edp D:/Dataset_Microexpressions
