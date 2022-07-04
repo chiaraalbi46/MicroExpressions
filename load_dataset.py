@@ -101,13 +101,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Load dataset train/validation")
     parser.add_argument("--csv_path", dest="save_path", default=None, help="path to the csv file to load "
                                                                            "dataset")
+    parser.add_argument("--pckl_path", dest="save_path", default=None, help="path to the pickle output file")
 
     args = parser.parse_args()
 
     videos, labels = load_data(csv_path=args.csv_path)
 
     import pickle
-    f = open('videos_labels.pckl', 'wb')
+    f = open(args.pckl_path, 'wb')
     pickle.dump([videos, labels], f)
     f.close()
 
