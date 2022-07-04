@@ -99,9 +99,9 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description="Load dataset train/validation")
-    parser.add_argument("--csv_path", dest="save_path", default=None, help="path to the csv file to load "
+    parser.add_argument("--csv_path", dest="csv_path", default=None, help="path to the csv file to load "
                                                                            "dataset")
-    parser.add_argument("--pckl_path", dest="save_path", default=None, help="path to the pickle output file")
+    parser.add_argument("--pckl_path", dest="pckl_path", default=None, help="path to the pickle output file")
 
     args = parser.parse_args()
 
