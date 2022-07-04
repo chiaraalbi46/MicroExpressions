@@ -44,8 +44,8 @@ if __name__ == '__main__':
     lr = float(args.lr)
     # wd = float(args.weight_decay)
 
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print("Device: ", device)
+    device = 'cuda:' + str(args.device) if torch.cuda.is_available() else 'cpu'
+    print("Device name: ", device, torch.cuda.get_device_name(int(args.device)))
 
     hyper_params = {
         "batch_size": batch_size,
