@@ -106,6 +106,11 @@ if __name__ == '__main__':
 
     videos, labels = load_data(csv_path=args.csv_path)
 
+    import pickle
+    f = open('videos_labels.pckl', 'wb')
+    pickle.dump([videos, labels], f)
+    f.close()
+
     # csv_path = 'train2.csv'
     # videos, labels = load_data(csv_path)
     #

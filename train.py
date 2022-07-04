@@ -3,7 +3,8 @@
 from comet_ml import Experiment
 import os.path
 import torch
-from load_dataset import load_data
+# from load_dataset import load_data
+import pickle
 from torch.utils.data import TensorDataset, DataLoader
 import argparse
 import numpy as np
@@ -22,9 +23,9 @@ if __name__ == '__main__':
 
     # iperparametri C3D
 
-    # train/valid csv
-    parser.add_argument("--train", dest="train", default=None, help="path to train csv file")
-    parser.add_argument("--valid", dest="valid", default=None, help="path to validation csv file")
+    # train/valid pickle
+    parser.add_argument("--train", dest="train", default=None, help="path to train pickle file")
+    parser.add_argument("--valid", dest="valid", default=None, help="path to validation pickle file")
 
     # comet
     parser.add_argument("--device", dest="device", default='0', help="choose GPU")
@@ -74,8 +75,16 @@ if __name__ == '__main__':
 
     # Dataset, dataloaders
 
-    train_images, train_labels = load_data(csv_path=args.train)
-    valid_images, valid_labels = load_data(csv_path=args.valid)
+    # train_images, train_labels = load_data(csv_path=args.train)
+    # valid_images, valid_labels = load_data(csv_path=args.valid)
+
+    f = open(args.train, 'rb')
+    train_images, train_labels = pickle.load(f)
+    f.close()
+
+    f = open(args.valid, 'rb')
+    valid_images, valid_labels = pickle.load(f)
+    f.close()
 
     train_data = TensorDataset(torch.from_numpy(train_images), torch.from_numpy(train_labels).type(torch.long))
     val_data = TensorDataset(torch.from_numpy(valid_images), torch.from_numpy(valid_labels).type(torch.long))
