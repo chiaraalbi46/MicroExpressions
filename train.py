@@ -169,5 +169,5 @@ if __name__ == '__main__':
     experiment.end()
     print("End training loop")
 
-    # Ex: python main.py --epochs 12 --batch_size 256 --name_exp vmr --weights_path ./model_weights
+    # Ex: python train.py --epochs 12 --batch_size 256 --name_exp vmr --weights_path ./model_weights
     # --comments 'first training'

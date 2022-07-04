@@ -16,7 +16,7 @@ import pandas as pd
 
 
 def create_csv(base_folder, users_list, emotion_csv, save_path):
-    users = os.listdir(base_folder)
+    users = sorted(os.listdir(base_folder))  # sorted is important because linux doesn't follow alphabetical order
 
     # se ho una matrice utenti x video
     df = pd.read_csv(emotion_csv)
@@ -28,7 +28,7 @@ def create_csv(base_folder, users_list, emotion_csv, save_path):
         filewriter = csv.writer(csvfile)
         for i in range(len(users)):
             user_path = base_folder + users[i] + '/'  # .../user_00/
-            videos = os.listdir(user_path)  # lista cartelle video
+            videos = sorted(os.listdir(user_path))  # lista cartelle video
             # users[i][-2:] --> le ultime due lettere di user_00
             if users[i][-2:] in users_list:  # train/validation
                 if users[i][-2:-1] == '0':
@@ -53,7 +53,7 @@ def create_csv(base_folder, users_list, emotion_csv, save_path):
                     print('label: ', lab)
                     print('')
 
-                    frames = os.listdir(video_dir_path)
+                    frames = sorted(os.listdir(video_dir_path))
                     # etichetto tutti i frame con la label del video cui appartengono
                     for k in range(len(frames)):  # ciclo sui frame del video j
                         frame_path = video_dir_path + frames[k]
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="Create csv file for training/validation/test")
 
-    parser.add_argument("--dataset_folder", dest="dataset_folder", default=None, help="dataset of frames")
+    parser.add_argument("--dataset_folder", dest="dataset_folder", default=None, help="dataset of frames")  # end slash
     parser.add_argument("--emotion_csv_path", dest="emotion_csv_path", default='Progetto VMR - Microespressioni.csv',
                         help="csv to label videos")
     parser.add_argument("--save_path", dest="save_path", default=None, help="path to the output csv file")
@@ -93,7 +93,7 @@ if __name__ == '__main__':
         create_csv(base_folder=args.dataset_folder, users_list=validation_users_list, emotion_csv=args.emotion_csv_path,
                    save_path=args.save_path)
 
-    # Ex: python create_csv_file.py --dataset_folder ./event_frame_NEW --save_path train.csv
+    # Ex: python create_csv_file.py --dataset_folder /home/calbisani/event_frame_NEW/ --save_path train.csv
 
     # base_folder = 'D:/Dataset_Microexpressions/frame_dataset/'  # cartella con i frame
     # save_path = 'train2.csv'
