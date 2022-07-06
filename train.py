@@ -151,7 +151,7 @@ if __name__ == '__main__':
                 val_images = val_batch[0].to(device)
                 val_labels = val_batch[1].to(device)
 
-                val_out, val_atn_weights_list = net(val_images)
+                val_out = net(val_images)
 
                 val_loss = loss(val_out, val_labels)
                 val_losses.append(val_loss.item())
