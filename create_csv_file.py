@@ -14,6 +14,8 @@ import pandas as pd
 #  conteneva i video di train etc ... nel nostro caso lo split si farebbe per utenti
 # simuliamo questa cosa con una lista che contiene gli utenti da usare per questa prova ...
 
+N_FRAMES = 51
+
 
 def create_csv(base_folder, users_list, emotion_csv, save_path):
     users = sorted(os.listdir(base_folder))  # sorted is important because linux doesn't follow alphabetical order
@@ -55,7 +57,8 @@ def create_csv(base_folder, users_list, emotion_csv, save_path):
 
                     frames = sorted(os.listdir(video_dir_path))
                     # etichetto tutti i frame con la label del video cui appartengono
-                    for k in range(len(frames)):  # ciclo sui frame del video j
+                    # for k in range(len(frames)):  # ciclo sui frame del video j
+                    for k in range(N_FRAMES):  # prendo solo
                         frame_path = video_dir_path + frames[k]
 
                         # line = [user_path, video_dir_path, frame_path, lab]
