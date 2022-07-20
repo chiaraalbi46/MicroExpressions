@@ -3,12 +3,52 @@
 from comet_ml import Experiment
 import os.path
 import torch
-# from load_dataset import load_data
+from load_dataset import number_to_lab
 import pickle
 from torch.utils.data import TensorDataset, DataLoader
 import argparse
 import numpy as np
 from C3D_model import C3D
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import itertools
+
+classes = ["Felicità", "Paura", "Sorpresa", "Disgusto", "Rabbia", "Tristezza", "Disprezzo", "Nessuna"]
+
+
+def plot_confusion_matrix(cm, classes, step, exp,
+                          normalize=False,
+                          title='Confusion matrix',
+                          cmap=plt.cm.Blues):
+    """
+        This function prints and plots the confusion matrix.
+        Normalization can be applied by setting `normalize=True`.
+    """
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    # plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=90)
+    plt.yticks(tick_marks, classes)
+
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.tight_layout()
+
+    exp.log_figure(figure_name=title, figure=plt, step=step)
 
 
 if __name__ == '__main__':
@@ -120,6 +160,7 @@ if __name__ == '__main__':
         val_losses = []
         train_accuracies = []
         val_accuracies = []
+
         for it, train_batch in enumerate(train_loader):
             train_images = train_batch[0].to(device)
             train_labels = train_batch[1].to(device)
@@ -165,7 +206,18 @@ if __name__ == '__main__':
         experiment.log_metric('valid_epoch_loss', sum(val_losses) / len(val_losses), step=epoch + 1)
         experiment.log_metric('valid_epoch_acc', sum(val_accuracies) / len(val_accuracies), step=epoch + 1)
 
-        # print("End valid test")
+        # confusion matrix
+        cf_train_mat = confusion_matrix(number_to_lab(train_labels), number_to_lab(out.argmax(dim=-1).data.numpy()),
+                                        labels=classes)
+        cf_valid_mat = confusion_matrix(number_to_lab(valid_labels), number_to_lab(val_out.argmax(dim=-1).data.numpy()),
+                                        labels=classes)
+
+        plot_confusion_matrix(cf_train_mat, classes=classes,
+                              normalize=True, step=epoch + 1, exp=experiment, title='train confusion matrix')
+
+        plot_confusion_matrix(cf_valid_mat, classes=classes,
+                              normalize=True, step=epoch + 1, exp=experiment, title='validation confusion matrix')
+
         print("Epoch [{}], Train loss: {:.4f}, Validation loss: {:.4f}".format(
             epoch + 1, sum(train_losses) / len(train_losses), sum(val_losses) / len(val_losses)))
 

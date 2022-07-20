@@ -37,7 +37,6 @@ def load_video(frames):
 
 def load_data(csv_path):
     data_df = pd.read_csv(csv_path, names=["user", "video", "frame", "label"], encoding='latin-1')
-    # penso dia noia l'accento di felicità
 
     users = data_df['user'].values
     u = np.unique(users)
@@ -76,12 +75,14 @@ def load_data(csv_path):
 
 # todo: migliorare
 def lab_to_number(lab):
-    new_lab = 0  # Felicità
-    if lab == 'Paura':
+
+    if lab == 'Felicità':
+        new_lab = 0
+    elif lab == 'Paura':
         new_lab = 1
     elif lab == 'Sorpresa':
         new_lab = 2
-    elif lab == 'Disprezzo':
+    elif lab == 'Disgusto':
         new_lab = 3
     elif lab == 'Rabbia':
         new_lab = 4
@@ -89,10 +90,35 @@ def lab_to_number(lab):
         new_lab = 5
     elif lab == 'Disprezzo':
         new_lab = 6
-    elif lab == 'Nessuna':
-        new_lab = 7
+    else:
+        new_lab = 7  # 'Nessuna'
 
     return new_lab
+
+
+def number_to_lab(numbers):
+    labels = []
+    for number in numbers:
+        if number == 0:
+            new_lab = 'Felicità'
+        elif number == 1:
+            new_lab = 'Paura'
+        elif number == 2:
+            new_lab = 'Sorpresa'
+        elif number == 3:
+            new_lab = 'Disgusto'
+        elif number == 4:
+            new_lab = 'Rabbia'
+        elif number == 5:
+            new_lab = 'Tristezza'
+        elif number == 6:
+            new_lab = 'Disprezzo'
+        else:
+            new_lab = 'Nessuna'  # number = 7
+
+        labels.append(new_lab)
+
+    return np.asarray(labels)
 
 
 if __name__ == '__main__':
@@ -111,6 +137,10 @@ if __name__ == '__main__':
     f = open(args.pckl_path, 'wb')
     pickle.dump([videos, labels], f)
     f.close()
+    # import torch
+    # labels_num = np.float32(np.array((0, 1, 0, 2, 1)))
+    # t = torch.from_numpy(labels_num).type(torch.long)
+    # res = number_to_lab(t.numpy())
 
     # csv_path = 'train2.csv'
     # videos, labels = load_data(csv_path)

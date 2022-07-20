@@ -46,10 +46,6 @@ def create_csv(base_folder, users_list, emotion_csv, save_path):
                     print("video dir: ", video_dir)
                     video_dir_path = user_path + video_dir + '/'  # path alla cartella video j-esimo
 
-                    # lab = users_video_labels[uid][j]  # utente, video
-                    # sto assumendo implicitamente che l'ordine degli id degli utenti sia coerente ... ma non è così ..
-                    # ad esempio ad uid 18 corrisponde l'id 19 dell'utente ...
-
                     print('surname: ', surnames[ind[0][0]])
                     lab = users_video_labels[ind[0][0]][j]  # utente, video
                     print('label: ', lab)
@@ -58,7 +54,7 @@ def create_csv(base_folder, users_list, emotion_csv, save_path):
                     frames = sorted(os.listdir(video_dir_path))
                     # etichetto tutti i frame con la label del video cui appartengono
                     # for k in range(len(frames)):  # ciclo sui frame del video j
-                    for k in range(N_FRAMES):  # prendo solo
+                    for k in range(N_FRAMES):  # prendo solo i primi N_FRAMES
                         frame_path = video_dir_path + frames[k]
 
                         # line = [user_path, video_dir_path, frame_path, lab]

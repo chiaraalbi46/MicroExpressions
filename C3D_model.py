@@ -108,6 +108,7 @@ if __name__ == '__main__':
     import pickle
     from torch.autograd import Variable
     import torch
+    import numpy as np
 
     # f = open('test_net_200x200.pckl', 'rb')
     # tens = pickle.load(f)
@@ -115,32 +116,21 @@ if __name__ == '__main__':
     tens, labels = pickle.load(f)
     f.close()
     net = C3D()
-    # net.cuda()
-    net.eval()
-
-    # perform prediction
-    # clip = Variable(torch.from_numpy(tens[:, :, 0:16, :, :]))  # 200, 200
-    clip = Variable(torch.from_numpy(tens))  # 200, 200
-    # va bene anche per 50 frame !!
-    # clip = clip.cuda()
-    prediction = net(clip)
-    loss = torch.nn.CrossEntropyLoss()
-    # loss_val = loss(prediction, torch.from_numpy(labels))
-    import numpy as np
-    labels_num = np.float32(np.array((0, 1, 0, 2, 1)))  # 0 felicità, 1 paura, 2 sorpresa
-    # todo: chiedere se va fatta meglio la 'conversione'... vedi codice di cifar10 forse ...
-    t = torch.from_numpy(labels_num).type(torch.long)  # torch.long serve
-    loss_val = loss(prediction, t)
-
-    # oks
-    # f = open('test_net.pckl', 'rb')
-    # tens = pickle.load(f)
-    # f.close()
-    # net = C3D()
-    # net.cuda()
+    # # net.cuda()
     # net.eval()
     #
     # # perform prediction
-    # clip = Variable(torch.from_numpy(tens[:, :, 0:16, :, 0:112]))  # 112, 112
-    # clip = clip.cuda()
+    # # clip = Variable(torch.from_numpy(tens[:, :, 0:16, :, :]))  # 200, 200
+    # clip = Variable(torch.from_numpy(tens))  # 200, 200
+    # # va bene anche per 50 frame !!
+    # # clip = clip.cuda()
     # prediction = net(clip)
+    # # loss = torch.nn.CrossEntropyLoss()
+    # # # loss_val = loss(prediction, torch.from_numpy(labels))
+    # # labels_num = np.float32(np.array((0, 1, 0, 2, 1)))  # 0 felicità, 1 paura, 2 sorpresa
+    # # t = torch.from_numpy(labels_num).type(torch.long)  # torch.long serve
+    # # loss_val = loss(prediction, t)
+    #
+    # model_parameters = filter(lambda p: p.requires_grad, net.parameters())  # [x for x in net.parameters()]
+    # params = sum([np.prod(p.size()) for p in model_parameters])
+    # print("Number of parameters: ", params)
