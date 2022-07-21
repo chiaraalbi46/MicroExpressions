@@ -48,6 +48,8 @@ def create_csv(base_folder, users_list, emotion_csv, save_path):
 
                     print('surname: ', surnames[ind[0][0]])
                     lab = users_video_labels[ind[0][0]][j]  # utente, video
+                    if lab[:-2] == 'Felicit':
+                        lab = lab.replace(lab[-2:], 'à')  # to solve the accent
                     print('label: ', lab)
                     print('')
 

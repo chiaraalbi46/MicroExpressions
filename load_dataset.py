@@ -54,7 +54,6 @@ def load_data(csv_path):
             images = load_video(frames)  # np.array
 
             label = d1['label'].values[0]  # la prima label ... tanto è la stessa per tutti i frame del video
-            label = label.replace(label[-2:], 'à')  # to solve the accent
             label = lab_to_number(label)
 
             videos.append(images[:, 0:N_FRAMES, :, :])  # mi interessano solo i primi N_FRAMES
