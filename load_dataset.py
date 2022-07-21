@@ -36,7 +36,7 @@ def load_video(frames):
 
 
 def load_data(csv_path):
-    data_df = pd.read_csv(csv_path, names=["user", "video", "frame", "label"], encoding='latin-1')
+    data_df = pd.read_csv(csv_path, names=["user", "video", "frame", "label"])
 
     users = data_df['user'].values
     u = np.unique(users)
