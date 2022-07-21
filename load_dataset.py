@@ -54,6 +54,7 @@ def load_data(csv_path):
             images = load_video(frames)  # np.array
 
             label = d1['label'].values[0]  # la prima label ... tanto è la stessa per tutti i frame del video
+            label = label.replace(label[-2:], 'à')  # to solve the accent
             label = lab_to_number(label)
 
             videos.append(images[:, 0:N_FRAMES, :, :])  # mi interessano solo i primi N_FRAMES
@@ -137,6 +138,7 @@ if __name__ == '__main__':
     f = open(args.pckl_path, 'wb')
     pickle.dump([videos, labels], f)
     f.close()
+
     # import torch
     # labels_num = np.float32(np.array((0, 1, 0, 2, 1)))
     # t = torch.from_numpy(labels_num).type(torch.long)
@@ -149,3 +151,17 @@ if __name__ == '__main__':
     # f = open('video_labels.pckl', 'wb')
     # pickle.dump([videos, labels], f)
     # f.close()
+
+    # ####
+    # csv_path = 'C:/Users/chiar/Desktop/train_short.csv'
+    # data_df = pd.read_csv(csv_path, names=["user", "video", "frame", "label"], encoding='latin-1')
+    #
+    # users = data_df['user'].values
+    # u = np.unique(users)
+    #
+    # d = data_df.loc[data_df['user'] == u[0]]  # blocco dell'utente corrente
+    # v = d['video'].values
+    # v_u = np.unique(v)  #
+    # d1 = d.loc[d['video'] == v_u[0]]  # blocco del video corrente
+    # label = d1['label'].values[0]
+    # label = label.replace(label[-2:], 'à')
