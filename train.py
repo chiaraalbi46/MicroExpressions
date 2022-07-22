@@ -207,10 +207,10 @@ if __name__ == '__main__':
         experiment.log_metric('valid_epoch_acc', sum(val_accuracies) / len(val_accuracies), step=epoch + 1)
 
         # confusion matrix
-        cf_train_mat = confusion_matrix(number_to_lab(train_labels), number_to_lab(out.argmax(dim=-1).data.numpy()),
-                                        labels=classes)
-        cf_valid_mat = confusion_matrix(number_to_lab(valid_labels), number_to_lab(val_out.argmax(dim=-1).data.numpy()),
-                                        labels=classes)
+        cf_train_mat = confusion_matrix(number_to_lab(train_labels),
+                                        number_to_lab(out.argmax(dim=-1).cpu().data.numpy()), labels=classes)
+        cf_valid_mat = confusion_matrix(number_to_lab(valid_labels),
+                                        number_to_lab(val_out.argmax(dim=-1).cpu().data.numpy()), labels=classes)
 
         plot_confusion_matrix(cf_train_mat, classes=classes,
                               normalize=True, step=epoch + 1, exp=experiment, title='train confusion matrix')
