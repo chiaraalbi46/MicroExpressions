@@ -30,6 +30,7 @@ def plot_confusion_matrix(cm, classes, step, exp,
     else:
         print('Confusion matrix, without normalization')
 
+    plt.clf()
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     # plt.title(title)
     plt.colorbar()
@@ -56,7 +57,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train C3D")
 
     parser.add_argument("--epochs", dest="epochs", default=1, help="number of epochs")
-    parser.add_argument("--batch_size", dest="batch_size", default=256, help="Batch size")
+    parser.add_argument("--batch_size", dest="batch_size", default=6, help="Batch size")
     parser.add_argument("--lr", dest="lr", default=0.001, help="learning rate train")
     # parser.add_argument("--weight_decay", dest="weight_decay", default=0., help="weight decay")
     # parser.add_argument("--val_perc", dest="val_perc", default=0, help="% validation set")

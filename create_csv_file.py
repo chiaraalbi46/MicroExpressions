@@ -64,6 +64,57 @@ def create_csv(base_folder, users_list, emotion_csv, save_path):
                         filewriter.writerow(line)
 
 
+def get_fixed_labels(emotion_csv):
+    import re
+    df = pd.read_csv(emotion_csv)
+    cols = df.columns
+    selected_cols = cols[np.arange(5, len(df.columns), 2)]  # questions in which we make explicit our labelling
+    labels = []
+    for c in selected_cols:
+        lab = re.findall(r'\b[A-Z]+(?:\s+[A-Z]+)*\b', c)  # find the capital letter words
+        lab = lab[0].title()
+        if lab[:-1] == 'Felicit':
+            lab = lab.replace(lab[-1:], 'à')  # to solve the accent
+        print("lab: ", lab)
+        labels.append(lab)
+
+    return labels
+
+
+def create_csv_with_fixed_labels(base_folder, users_list, fixed_labels, save_path):
+    users = sorted(os.listdir(base_folder))  # sorted is important because linux doesn't follow alphabetical order
+
+    with open(save_path, 'w') as csvfile:  # ciclo sugli utenti
+        filewriter = csv.writer(csvfile)
+        for i in range(len(users)):
+            user_path = base_folder + users[i] + '/'  # .../user_00/
+            videos = sorted(os.listdir(user_path))  # lista cartelle video
+            # users[i][-2:] --> le ultime due lettere di user_00
+            if users[i][-2:] in users_list:  # train/validation
+                if users[i][-2:-1] == '0':
+                    uid = int(users[i][-1])  # l'ultima cifra è l'utente
+                else:
+                    uid = int(users[i][-2:])
+                print('users[i], uid: ', users[i], uid)
+                # per ora tutti i video di utente stanno insieme (o train o validation)
+                for j in range(len(videos)):  # ciclo sulle cartelle dei video dell'utente
+                    video_dir = videos[j]
+                    print("video dir: ", video_dir)
+                    video_dir_path = user_path + video_dir + '/'  # path alla cartella video j-esimo
+
+                    lab = fixed_labels[j]  # video label
+                    print('label: ', lab)
+                    print('')
+
+                    frames = sorted(os.listdir(video_dir_path))
+                    # etichetto tutti i frame con la label del video cui appartengono
+                    # for k in range(len(frames)):  # ciclo sui frame del video j
+                    for k in range(N_FRAMES):  # prendo solo i primi N_FRAMES
+                        frame_path = video_dir_path + frames[k]
+                        line = ['user_' + users[i][-2:], video_dir, frame_path, lab]
+                        filewriter.writerow(line)
+
+
 if __name__ == '__main__':
     import numpy as np
     import argparse
@@ -76,6 +127,7 @@ if __name__ == '__main__':
     parser.add_argument("--save_path", dest="save_path", default=None, help="path to the output csv file")
 
     parser.add_argument("--train", dest="train", default=1, help="1 train, 0 validation")
+    parser.add_argument("--labelling", dest="labelling", default=1, help="1 for users' labelling, 0 for our labelling")
 
     args = parser.parse_args()
 
@@ -85,14 +137,29 @@ if __name__ == '__main__':
     # todo: sarà random poi ... o scritta in un altro file che si può passare per estrarla
 
     var = int(args.train)
+    var_lab = int(args.labelling)
     if var == 1:
         print("Train csv")
-        create_csv(base_folder=args.dataset_folder, users_list=train_users_list, emotion_csv=args.emotion_csv_path,
-                   save_path=args.save_path)
+        if var_lab == 1:
+            print("Users' labelling")
+            create_csv(base_folder=args.dataset_folder, users_list=train_users_list, emotion_csv=args.emotion_csv_path,
+                       save_path=args.save_path)
+        else:
+            print("Our labelling")
+            fixed_labels = get_fixed_labels(emotion_csv=args.emotion_csv_path)
+            create_csv_with_fixed_labels(base_folder=args.dataset_folder, users_list=train_users_list,
+                                         fixed_labels=fixed_labels, save_path=args.save_path)
     else:
         print("Validation csv")
-        create_csv(base_folder=args.dataset_folder, users_list=validation_users_list, emotion_csv=args.emotion_csv_path,
-                   save_path=args.save_path)
+        if var_lab == 1:
+            print("Users' labelling")
+            create_csv(base_folder=args.dataset_folder, users_list=validation_users_list,
+                       emotion_csv=args.emotion_csv_path, save_path=args.save_path)
+        else:
+            print("Our labelling")
+            fixed_labels = get_fixed_labels(emotion_csv=args.emotion_csv_path)
+            create_csv_with_fixed_labels(base_folder=args.dataset_folder, users_list=validation_users_list,
+                                         fixed_labels=fixed_labels, save_path=args.save_path)
 
     # Ex: python create_csv_file.py --dataset_folder /home/calbisani/event_frame_NEW/ --save_path train.csv
 
