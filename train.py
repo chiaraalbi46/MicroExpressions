@@ -13,8 +13,6 @@ from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import itertools
 
-classes = ["Felicità", "Paura", "Sorpresa", "Disgusto", "Rabbia", "Tristezza", "Disprezzo", "Nessuna"]
-
 
 def plot_confusion_matrix(cm, classes, step, exp,
                           normalize=False,
@@ -68,6 +66,9 @@ if __name__ == '__main__':
     parser.add_argument("--train", dest="train", default=None, help="path to train pickle file")
     parser.add_argument("--valid", dest="valid", default=None, help="path to validation pickle file")
 
+    parser.add_argument("--labelling", dest="labelling", default=1, help="1 for user labelling, 0 for our labelling")
+    # this acts on the number of classes (8 for users' labelling, 7 for our labelling)
+
     # comet
     parser.add_argument("--device", dest="device", default='0', help="choose GPU")
     parser.add_argument("--name_proj", dest="name_proj", default='MicroExpr', help="define comet ml project folder")
@@ -84,23 +85,34 @@ if __name__ == '__main__':
     num_epochs = int(args.epochs)
     lr = float(args.lr)
     # wd = float(args.weight_decay)
+    labelling = int(args.labelling)
 
     device = 'cuda:' + str(args.device) if torch.cuda.is_available() else 'cpu'
     print("Device name: ", device, torch.cuda.get_device_name(int(args.device)))
-
-    hyper_params = {
-        "batch_size": batch_size,
-        "num_epochs": num_epochs,
-        "learning_rate": lr,
-        # "weight_decay": wd,  # todo aggiungi iperparametri c3d
-    }
 
     # Comet ml integration
     experiment = Experiment(project_name=args.name_proj)
     experiment.set_name(args.name_exp)
 
     # Definizione modello
-    net = C3D()
+    if labelling == 1:
+        print("User labelling")
+        num_classes = 8
+        classes = ["Felicità", "Paura", "Sorpresa", "Disgusto", "Rabbia", "Tristezza", "Disprezzo", "Nessuna"]
+    else:
+        print("Our labelling")
+        num_classes = 7
+        classes = ["Felicità", "Paura", "Sorpresa", "Disgusto", "Rabbia", "Tristezza", "Disprezzo"]
+
+    net = C3D(num_classes=num_classes)
+
+    hyper_params = {
+        "batch_size": batch_size,
+        "num_epochs": num_epochs,
+        "learning_rate": lr,
+        "num_classes": num_classes
+        # "weight_decay": wd,
+    }
 
     experiment.log_parameters(hyper_params)
     experiment.set_model_graph(net)
@@ -115,9 +127,6 @@ if __name__ == '__main__':
     #     json.dump(hyper_params, outfile, indent=4)
 
     # Dataset, dataloaders
-
-    # train_images, train_labels = load_data(csv_path=args.train)
-    # valid_images, valid_labels = load_data(csv_path=args.valid)
 
     f = open(args.train, 'rb')
     train_images, train_labels = pickle.load(f)
@@ -153,6 +162,7 @@ if __name__ == '__main__':
 
     print("Start training loop")
 
+    epoch_pc_acc = []
     for epoch in range(num_epochs):
         net.train()  # Sets the module in training mode
 
@@ -161,6 +171,9 @@ if __name__ == '__main__':
         val_losses = []
         train_accuracies = []
         val_accuracies = []
+
+        y_true = []
+        y_pred = []
 
         for it, train_batch in enumerate(train_loader):
             train_images = train_batch[0].to(device)
@@ -201,6 +214,9 @@ if __name__ == '__main__':
                 val_acc = (val_out.argmax(dim=-1) == val_labels).float().mean()
                 val_accuracies.append(val_acc.item())
 
+                y_pred.extend(val_out.argmax(dim=-1).cpu().data.numpy())  # Save Prediction
+                y_true.extend(val_labels.cpu().data.numpy())  # Save Truth
+
         # comet ml
         experiment.log_metric('train_epoch_loss', sum(train_losses) / len(train_losses), step=epoch + 1)
         experiment.log_metric('train_epoch_acc', sum(train_accuracies) / len(train_accuracies), step=epoch + 1)
@@ -208,16 +224,20 @@ if __name__ == '__main__':
         experiment.log_metric('valid_epoch_acc', sum(val_accuracies) / len(val_accuracies), step=epoch + 1)
 
         # confusion matrix
-        cf_train_mat = confusion_matrix(number_to_lab(train_labels),
-                                        number_to_lab(out.argmax(dim=-1).cpu().data.numpy()), labels=classes)
-        cf_valid_mat = confusion_matrix(number_to_lab(val_labels),
-                                        number_to_lab(val_out.argmax(dim=-1).cpu().data.numpy()), labels=classes)
+        # cf_train_mat = confusion_matrix(number_to_lab(train_labels),
+        #                                 number_to_lab(out.argmax(dim=-1).cpu().data.numpy()), labels=classes)
+        cf_valid_mat = confusion_matrix(number_to_lab(y_true),
+                                        number_to_lab(y_pred), labels=classes)
 
-        plot_confusion_matrix(cf_train_mat, classes=classes,
-                              normalize=True, step=epoch + 1, exp=experiment, title='train confusion matrix')
+        # plot_confusion_matrix(cf_train_mat, classes=classes,
+        #                       normalize=True, step=epoch + 1, exp=experiment, title='train confusion matrix')
 
         plot_confusion_matrix(cf_valid_mat, classes=classes,
                               normalize=True, step=epoch + 1, exp=experiment, title='validation confusion matrix')
+
+        # per class accuracy (of one epoch)
+        per_class_val_acc = cf_valid_mat.diagonal() / cf_valid_mat.diagonal().sum()
+        epoch_pc_acc.append(per_class_val_acc)
 
         print("Epoch [{}], Train loss: {:.4f}, Validation loss: {:.4f}".format(
             epoch + 1, sum(train_losses) / len(train_losses), sum(val_losses) / len(val_losses)))
@@ -227,6 +247,12 @@ if __name__ == '__main__':
             torch.save(net.state_dict(), save_weights_path + '/weights_' + str(epoch + 1) + '.pth')
 
     torch.save(net.state_dict(), save_weights_path + '/final.pth')
+
+    # log per-class-val-acc for all epochs
+    epoch_pc_acc = np.array(epoch_pc_acc)
+    plt.clf()
+    plt.imshow(epoch_pc_acc, cmap='hot', interpolation='nearest')
+    experiment.log_figure(figure_name='per-class-acc', figure=plt)
 
     experiment.end()
     print("End training loop")

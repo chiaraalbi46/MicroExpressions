@@ -127,7 +127,7 @@ if __name__ == '__main__':
     parser.add_argument("--save_path", dest="save_path", default=None, help="path to the output csv file")
 
     parser.add_argument("--train", dest="train", default=1, help="1 train, 0 validation")
-    parser.add_argument("--labelling", dest="labelling", default=1, help="1 for users' labelling, 0 for our labelling")
+    parser.add_argument("--labelling", dest="labelling", default=1, help="1 for user labelling, 0 for our labelling")
 
     args = parser.parse_args()
 
@@ -141,7 +141,7 @@ if __name__ == '__main__':
     if var == 1:
         print("Train csv")
         if var_lab == 1:
-            print("Users' labelling")
+            print("User labelling")
             create_csv(base_folder=args.dataset_folder, users_list=train_users_list, emotion_csv=args.emotion_csv_path,
                        save_path=args.save_path)
         else:

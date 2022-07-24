@@ -73,7 +73,6 @@ def load_data(csv_path):
     return videos, labels
 
 
-# todo: migliorare
 def lab_to_number(lab):
 
     if lab == 'Felicità':
