@@ -251,6 +251,10 @@ if __name__ == '__main__':
 
     # log per-class-val-acc for all epochs
     epoch_pc_acc = np.array(epoch_pc_acc)
+    # salvo in pickle per plottarla meglio a fine
+    f = open(save_weights_path + '/epoch_pc_acc.pckl', 'wb')
+    pickle.dump(epoch_pc_acc, f)
+    f.close()
     plt.clf()
     fig, ax = plt.subplots(figsize=(num_epochs, num_classes))
     sns.heatmap(epoch_pc_acc, annot=True, linewidths=.3)
