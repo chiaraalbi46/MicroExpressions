@@ -11,6 +11,7 @@ import numpy as np
 from C3D_model import C3D
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
+import seaborn as sns
 import itertools
 
 
@@ -251,7 +252,9 @@ if __name__ == '__main__':
     # log per-class-val-acc for all epochs
     epoch_pc_acc = np.array(epoch_pc_acc)
     plt.clf()
-    plt.imshow(epoch_pc_acc, cmap='hot', interpolation='nearest')
+    fig, ax = plt.subplots(figsize=(num_epochs, num_classes))
+    sns.heatmap(epoch_pc_acc, annot=True, linewidths=.3)
+    # plt.imshow(epoch_pc_acc, cmap='hot', interpolation='nearest')
     experiment.log_figure(figure_name='per-class-acc', figure=plt)
 
     experiment.end()
