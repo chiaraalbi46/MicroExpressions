@@ -131,9 +131,15 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    # train_users_list = ['01', '02', '04', '05', '06', '08', '09', '10', '11', '12', '13', '14', '15', '16',
+    #                     '21', '22', '23', '24', '25', '26']  # 20 utenti
+    # validation_users_list = ['07', '19']  # 2 utenti
+
+    # new (esclusi 18 (io), 00 (serena), ) ; aggiunti: 17 (lisa), 27 (federico), 28 (ferracani)
     train_users_list = ['01', '02', '04', '05', '06', '08', '09', '10', '11', '12', '13', '14', '15', '16',
                         '21', '22', '23', '24', '25', '26']  # 20 utenti
-    validation_users_list = ['07', '19']  # 2 utenti
+    validation_users_list = ['03', '07', '17', '19', '27', '28']  # 6 utenti
+
     # todo: sarà random poi ... o scritta in un altro file che si può passare per estrarla
 
     var = int(args.train)
@@ -162,12 +168,6 @@ if __name__ == '__main__':
                                          fixed_labels=fixed_labels, save_path=args.save_path)
 
     # Ex: python create_csv_file.py --dataset_folder /home/calbisani/event_frame_NEW/ --save_path train.csv
-
-    # base_folder = 'D:/Dataset_Microexpressions/frame_dataset/'  # cartella con i frame
-    # save_path = 'train2.csv'
-    # emotion_csv_path = 'Progetto VMR - Microespressioni.csv'  # csv per etichettatura video
-    #
-    # create_csv(base_folder, train_users_list, emotion_csv_path, save_path)
 
 
 

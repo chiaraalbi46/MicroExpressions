@@ -74,7 +74,6 @@ def load_data(csv_path):
 
 
 def lab_to_number(lab):
-
     if lab == 'Felicità':
         new_lab = 0
     elif lab == 'Paura':
@@ -124,8 +123,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description="Load dataset train/validation")
-    parser.add_argument("--csv_path", dest="csv_path", default=None, help="path to the csv file to load "
-                                                                           "dataset")
+    parser.add_argument("--csv_path", dest="csv_path", default=None, help="path to the csv file to load dataset")
     parser.add_argument("--pckl_path", dest="pckl_path", default=None, help="path to the pickle output file")
 
     args = parser.parse_args()
@@ -133,6 +131,7 @@ if __name__ == '__main__':
     videos, labels = load_data(csv_path=args.csv_path)
 
     import pickle
+
     f = open(args.pckl_path, 'wb')
     pickle.dump([videos, labels], f)
     f.close()
@@ -150,10 +149,9 @@ if __name__ == '__main__':
     # pickle.dump([videos, labels], f)
     # f.close()
 
-    # ####
+    ####
     # csv_path = 'C:/Users/chiar/Desktop/train_short.csv'
-    # data_df = pd.read_csv(csv_path, names=["user", "video", "frame", "label"], encoding='latin-1')
-    #
+    # data_df = pd.read_csv(csv_path, names=["user", "video", "frame", "label"])
     # users = data_df['user'].values
     # u = np.unique(users)
     #
@@ -161,5 +159,9 @@ if __name__ == '__main__':
     # v = d['video'].values
     # v_u = np.unique(v)  #
     # d1 = d.loc[d['video'] == v_u[0]]  # blocco del video corrente
+    #
     # label = d1['label'].values[0]
     # label = label.replace(label[-2:], 'à')
+    #
+    # frames = d1['frame'].values  # N_FRAMES per video
+    # images = load_video(frames)  #
