@@ -13,6 +13,7 @@ from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
 import itertools
+import sklearn.metrics
 
 
 def plot_confusion_matrix(cm, classes, step, exp,
@@ -147,7 +148,12 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)  # weight_decay=wd
 
     # Loss def
-    loss = torch.nn.CrossEntropyLoss()  # dovrebbe andar bene dato che è un problema di classificazione multilabel
+    # pesi loss
+    class_weights = sklearn.utils.class_weight.compute_class_weight(class_weight='balanced',
+                                                                    classes=np.unique(train_labels), y=train_labels)
+    weight = torch.tensor(class_weights, dtype=torch.float).to(device)
+    loss = torch.nn.CrossEntropyLoss(weight=weight)
+    # loss = torch.nn.CrossEntropyLoss()  # dovrebbe andar bene dato che è un problema di classificazione multilabel
 
     # Model to GPU
     net = net.to(device)
