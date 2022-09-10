@@ -16,10 +16,7 @@ import itertools
 import sklearn.metrics
 
 
-def plot_confusion_matrix(cm, classes, step, exp,
-                          normalize=False,
-                          title='Confusion matrix',
-                          cmap=plt.cm.Blues):
+def plot_confusion_matrix(cm, classes, step, exp, normalize=False, title='Confusion matrix', cmap=plt.cm.Blues):
     """
         This function prints and plots the confusion matrix.
         Normalization can be applied by setting `normalize=True`.
@@ -80,6 +77,8 @@ if __name__ == '__main__':
     parser.add_argument("--weights_path", dest="weights_path", default=None,
                         help="path to the folder where storing the model weights")
 
+    parser.add_argument("--loss_weights", dest="loss_weights", default=0, help="1 to weight the loss, 0 otherwise")
+
     args = parser.parse_args()
 
     # Hyper-parameters
@@ -112,7 +111,8 @@ if __name__ == '__main__':
         "batch_size": batch_size,
         "num_epochs": num_epochs,
         "learning_rate": lr,
-        "num_classes": num_classes
+        "num_classes": num_classes,
+        "loss_weights": int(args.loss_weigths)
         # "weight_decay": wd,
     }
 
@@ -123,10 +123,6 @@ if __name__ == '__main__':
     if not os.path.exists(save_weights_path):
         os.makedirs(save_weights_path)
     print("save weights: ", save_weights_path)
-
-    # # save hyperparams dictionary in save_weights_path
-    # with open(save_weights_path + '/hyperparams.json', "w") as outfile:
-    #     json.dump(hyper_params, outfile, indent=4)
 
     # Dataset, dataloaders
 
@@ -148,12 +144,22 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)  # weight_decay=wd
 
     # Loss def
-    # pesi loss
-    class_weights = sklearn.utils.class_weight.compute_class_weight(class_weight='balanced',
-                                                                    classes=np.unique(train_labels), y=train_labels)
-    weight = torch.tensor(class_weights, dtype=torch.float).to(device)
-    loss = torch.nn.CrossEntropyLoss(weight=weight)
-    # loss = torch.nn.CrossEntropyLoss()  # dovrebbe andar bene dato che è un problema di classificazione multilabel
+    if int(args.loss_weights) == 1:
+        print("Loss weights")
+        # pesi loss
+        # class_weights = sklearn.utils.class_weight.compute_class_weight(class_weight='balanced',
+        #                                                                 classes=np.unique(train_labels), y=train_labels)
+        # weight = torch.tensor(class_weights, dtype=torch.float).to(device)
+        if labelling == 1:
+            # 8 classes --> 8 weights
+            weight = torch.tensor([2, 25, 1, 20, 15, 1, 10, 25]).float().to(device)
+        else:
+            # 7 classes --> 7 weights
+            pass   # todo
+
+        loss = torch.nn.CrossEntropyLoss(weight=weight)
+    else:
+        loss = torch.nn.CrossEntropyLoss()
 
     # Model to GPU
     net = net.to(device)
@@ -261,11 +267,11 @@ if __name__ == '__main__':
     f = open(save_weights_path + '/epoch_pc_acc.pckl', 'wb')
     pickle.dump(epoch_pc_acc, f)
     f.close()
-    plt.clf()
-    fig, ax = plt.subplots(figsize=(num_epochs, num_classes))
-    sns.heatmap(epoch_pc_acc, annot=True, linewidths=.3)
-    # plt.imshow(epoch_pc_acc, cmap='hot', interpolation='nearest')
-    experiment.log_figure(figure_name='per-class-acc', figure=plt)
+    # plt.clf()
+    # fig, ax = plt.subplots(figsize=(num_epochs, num_classes))
+    # sns.heatmap(epoch_pc_acc, annot=True, linewidths=.3)
+    # # plt.imshow(epoch_pc_acc, cmap='hot', interpolation='nearest')
+    # experiment.log_figure(figure_name='per-class-acc', figure=plt)
 
     experiment.end()
     print("End training loop")
