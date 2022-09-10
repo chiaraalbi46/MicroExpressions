@@ -112,7 +112,7 @@ if __name__ == '__main__':
         "num_epochs": num_epochs,
         "learning_rate": lr,
         "num_classes": num_classes,
-        "loss_weights": int(args.loss_weigths)
+        "loss_weights": int(args.loss_weights)
         # "weight_decay": wd,
     }
 
