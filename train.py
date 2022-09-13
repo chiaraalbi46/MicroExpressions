@@ -143,10 +143,11 @@ if __name__ == '__main__':
     if int(args.data_aug) == 1:
         # per i dati con data augmentation
         train_data = TensorDataset(train_images, train_labels)  # in load dataset salvo già i tensori
-        val_data = TensorDataset(valid_images, valid_labels)
     else:
         train_data = TensorDataset(torch.from_numpy(train_images), torch.from_numpy(train_labels).type(torch.long))
-        val_data = TensorDataset(torch.from_numpy(valid_images), torch.from_numpy(valid_labels).type(torch.long))
+
+    # perchè ho rifatto solo i train con data augmentation e quindi come tensori     
+    val_data = TensorDataset(torch.from_numpy(valid_images), torch.from_numpy(valid_labels).type(torch.long))
 
     train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
     validation_loader = DataLoader(val_data, shuffle=False, batch_size=batch_size, drop_last=True)
