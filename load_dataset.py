@@ -3,6 +3,7 @@
 import pandas as pd
 import os
 import numpy as np
+import torch
 
 IMAGE_HEIGHT = 200  # 112
 IMAGE_WIDTH = 200  # 112
@@ -10,32 +11,60 @@ IMAGE_CHANNELS = 1
 N_FRAMES = 51  # 50
 
 
-def load_video(frames):
+def load_video(frames, data_aug):
     # frames is an np.array with the path to the frames of a single video
     import matplotlib.pyplot as plt
     import cv2
+    from PIL import Image
+    import torchvision.transforms as transforms
+    import torch
+
+    if data_aug == 1:
+        print("Data augmentation")
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize((IMAGE_HEIGHT, IMAGE_WIDTH), interpolation=transforms.InterpolationMode.NEAREST),
+            transforms.RandomVerticalFlip(),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(degrees=(0, 5))])
+    else:
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize((IMAGE_WIDTH, IMAGE_HEIGHT), interpolation=transforms.InterpolationMode.NEAREST)])
 
     frames = frames.tolist()
     images = []  # accumula i frame
     for i in range(len(frames)):
         if os.path.exists(frames[i]):
             print("frame: ", frames[i])
-            im = plt.imread(frames[i])  # np.array (h, w, c)
-            print("im shape: ", im.shape)
-            im = im[:, :, 0]  # tanto tutti i canali sono uguali (l'ultima slice è tutta di 1 ...opacità) (h, w)
-            print("im shape: ", im.shape)
+            # im = plt.imread(frames[i])  # np.array (h, w, c)
+            # print("im shape: ", im.shape)
+            # im = im[:, :, 0]  # tanto tutti i canali sono uguali (l'ultima slice è tutta di 1 ...opacità) (h, w)
+            # # print("im shape: ", im.shape)
+
+            ##
+            im = Image.open(frames[i])
+            im.load()
+            im = np.array(im)[:, :, 0]
+            im = Image.fromarray(im, mode='L')
+            im = transform(im)
+            ##
+
             # resize
-            im = cv2.resize(im, dsize=(IMAGE_WIDTH, IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)  # dsize is w, h
-            im = np.float32(im)
+            # im = cv2.resize(im, dsize=(IMAGE_WIDTH, IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)  # dsize is w, h
+            # im = np.float32(im)
             images.append(im)
 
-    images = np.array(images)  # fr, h, w
-    images = images[np.newaxis, :]  # ch, fr, h, w
+    # images = np.array(images)  # fr, h, w
+    # images = images[np.newaxis, :]  # ch, fr, h, w
+
+    images = torch.stack(images, 0)  # fr, ch, h, w
+    images = images.permute(1, 0, 2, 3)  # ch, fr, h, w
     print("images shape: ", images.shape)
     return images
 
 
-def load_data(csv_path):
+def load_data(csv_path, data_aug):
     data_df = pd.read_csv(csv_path, names=["user", "video", "frame", "label"])
 
     users = data_df['user'].values
@@ -51,7 +80,7 @@ def load_data(csv_path):
         for vid in v_u:
             d1 = d.loc[d['video'] == vid]  # blocco del video corrente
             frames = d1['frame'].values  # N_FRAMES per video
-            images = load_video(frames)  # np.array
+            images = load_video(frames, data_aug=data_aug)  # np.array
 
             label = d1['label'].values[0]  # la prima label ... tanto è la stessa per tutti i frame del video
             label = lab_to_number(label)
@@ -59,14 +88,13 @@ def load_data(csv_path):
             videos.append(images[:, 0:N_FRAMES, :, :])  # mi interessano solo i primi N_FRAMES
             labels.append(label)
 
-            # if images.shape == (IMAGE_CHANNELS, N_FRAMES, IMAGE_HEIGHT, IMAGE_WIDTH):  # (1, 51, 200, 200)
-            #     videos.append(images)
-            #     labels.append(label)
-            # else:
-            #     print("video droppato (non posso fare il broadcast)")
-
-    videos = np.array(videos)  # accumula i video come 'righe'  --> tenendo conto di questo ho fatto images a 4 dim
+    print("videos shape: ", len(videos))
+    # videos = np.array(videos)  # accumula i video come 'righe'  --> tenendo conto di questo ho fatto images a 4 dim
     labels = np.array(labels)
+    labels = torch.from_numpy(labels).type(torch.long)
+
+    videos = torch.stack(videos, 0)
+
     print("final shape: ", videos.shape)
     print("final shape labels: ", labels.shape)
 
@@ -125,10 +153,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Load dataset train/validation")
     parser.add_argument("--csv_path", dest="csv_path", default=None, help="path to the csv file to load dataset")
     parser.add_argument("--pckl_path", dest="pckl_path", default=None, help="path to the pickle output file")
+    parser.add_argument("--data_aug", dest="data_aug", default=0, help="1 to apply data augmentation, 0 otherwise")
 
     args = parser.parse_args()
 
-    videos, labels = load_data(csv_path=args.csv_path)
+    videos, labels = load_data(csv_path=args.csv_path, data_aug=int(args.data_aug))
 
     import pickle
 

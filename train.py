@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import itertools
 import sklearn.metrics
+from PIL import Image
+import torchvision.transforms as transforms
 
 
 def plot_confusion_matrix(cm, classes, step, exp, normalize=False, title='Confusion matrix', cmap=plt.cm.Blues):
@@ -78,6 +80,9 @@ if __name__ == '__main__':
                         help="path to the folder where storing the model weights")
 
     parser.add_argument("--loss_weights", dest="loss_weights", default=0, help="1 to weight the loss, 0 otherwise")
+    parser.add_argument("--data_aug", dest="data_aug", default=0,
+                        help="1 to use augmented data, 0 otherwise. set to 1 if you pass train data with augmentation")
+
 
     args = parser.parse_args()
 
@@ -134,8 +139,14 @@ if __name__ == '__main__':
     valid_images, valid_labels = pickle.load(f)
     f.close()
 
-    train_data = TensorDataset(torch.from_numpy(train_images), torch.from_numpy(train_labels).type(torch.long))
-    val_data = TensorDataset(torch.from_numpy(valid_images), torch.from_numpy(valid_labels).type(torch.long))
+    # questo solo perchè abbiamo i dati 'vecchi' che non sono tensori ... da togliere poi 
+    if int(args.data_aug) == 1:
+        # per i dati con data augmentation
+        train_data = TensorDataset(train_images, train_labels)  # in load dataset salvo già i tensori
+        val_data = TensorDataset(valid_images, valid_labels)
+    else:
+        train_data = TensorDataset(torch.from_numpy(train_images), torch.from_numpy(train_labels).type(torch.long))
+        val_data = TensorDataset(torch.from_numpy(valid_images), torch.from_numpy(valid_labels).type(torch.long))
 
     train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
     validation_loader = DataLoader(val_data, shuffle=False, batch_size=batch_size, drop_last=True)
