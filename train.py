@@ -139,7 +139,7 @@ if __name__ == '__main__':
     valid_images, valid_labels = pickle.load(f)
     f.close()
 
-    # questo solo perchè abbiamo i dati 'vecchi' che non sono tensori ... da togliere poi 
+    # questo solo perchè abbiamo i dati 'vecchi' che non sono tensori ... da togliere poi
     if int(args.data_aug) == 1:
         # per i dati con data augmentation
         train_data = TensorDataset(train_images, train_labels)  # in load dataset salvo già i tensori
@@ -248,13 +248,13 @@ if __name__ == '__main__':
         experiment.log_metric('valid_epoch_acc', sum(val_accuracies) / len(val_accuracies), step=epoch + 1)
 
         # confusion matrix
-        # cf_train_mat = confusion_matrix(number_to_lab(train_labels),
-        #                                 number_to_lab(out.argmax(dim=-1).cpu().data.numpy()), labels=classes)
-        cf_valid_mat = confusion_matrix(number_to_lab(y_true),
-                                        number_to_lab(y_pred), labels=classes)
+        cf_valid_mat = confusion_matrix(number_to_lab(y_true), number_to_lab(y_pred), labels=classes)
 
-        # plot_confusion_matrix(cf_train_mat, classes=classes,
-        #                       normalize=True, step=epoch + 1, exp=experiment, title='train confusion matrix')
+        # if epoch == 0 and (epoch + 1) % 100:
+        #     cf_train_mat = confusion_matrix(number_to_lab(train_labels),  todo
+        #                                     number_to_lab(out.argmax(dim=-1).cpu().data.numpy()), labels=classes)
+        #     plot_confusion_matrix(cf_train_mat, classes=classes,
+        #                           normalize=True, step=epoch + 1, exp=experiment, title='train confusion matrix')
 
         plot_confusion_matrix(cf_valid_mat, classes=classes,
                               normalize=True, step=epoch + 1, exp=experiment, title='validation confusion matrix')
