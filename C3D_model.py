@@ -6,7 +6,7 @@ class C3D(nn.Module):
     The C3D network as described in [1].
     """
 
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, drop_val):
         super(C3D, self).__init__()
 
         self.conv1 = nn.Conv3d(1, 4, kernel_size=(3, 3, 3), padding=(1, 1, 1))
@@ -39,7 +39,7 @@ class C3D(nn.Module):
         # self.fc8 = nn.Linear(4096, 8)  # le nostre labels sono 7 (le emozioni) + 1 (nessuna)
         self.fc8 = nn.Linear(64, num_classes)
 
-        self.dropout = nn.Dropout(p=0.2)
+        self.dropout = nn.Dropout(p=drop_val)  # 0.2 originariamente
 
         self.relu = nn.ReLU()
         self.softmax = nn.Softmax()
@@ -119,7 +119,7 @@ if __name__ == '__main__':
     f = open('video_labels.pckl', 'rb')
     tens, labels = pickle.load(f)
     f.close()
-    net = C3D(num_classes=8)
+    net = C3D(num_classes=8, drop_val=0.5)
     # # net.cuda()
     # net.eval()
     #

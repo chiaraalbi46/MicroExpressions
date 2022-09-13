@@ -58,7 +58,8 @@ if __name__ == '__main__':
     parser.add_argument("--epochs", dest="epochs", default=1, help="number of epochs")
     parser.add_argument("--batch_size", dest="batch_size", default=6, help="Batch size")
     parser.add_argument("--lr", dest="lr", default=0.001, help="learning rate train")
-    # parser.add_argument("--weight_decay", dest="weight_decay", default=0., help="weight decay")
+    parser.add_argument("--weight_decay", dest="weight_decay", default=0., help="weight decay")
+    parser.add_argument("--drop_val", dest="drop_val", default=0.2, help="dropout probability")
     # parser.add_argument("--val_perc", dest="val_perc", default=0, help="% validation set")
 
     # iperparametri C3D
@@ -90,7 +91,7 @@ if __name__ == '__main__':
     batch_size = int(args.batch_size)
     num_epochs = int(args.epochs)
     lr = float(args.lr)
-    # wd = float(args.weight_decay)
+    wd = float(args.weight_decay)
     labelling = int(args.labelling)
 
     device = 'cuda:' + str(args.device) if torch.cuda.is_available() else 'cpu'
@@ -110,15 +111,16 @@ if __name__ == '__main__':
         num_classes = 7
         classes = ["Felicità", "Paura", "Sorpresa", "Disgusto", "Rabbia", "Tristezza", "Disprezzo"]
 
-    net = C3D(num_classes=num_classes)
+    net = C3D(num_classes=num_classes, drop_val=float(args.drop_val))
 
     hyper_params = {
         "batch_size": batch_size,
         "num_epochs": num_epochs,
         "learning_rate": lr,
         "num_classes": num_classes,
-        "loss_weights": int(args.loss_weights)
-        # "weight_decay": wd,
+        "loss_weights": int(args.loss_weights),
+        "weight_decay": wd,
+        "drop_val": float(args.drop_val)
     }
 
     experiment.log_parameters(hyper_params)
@@ -146,14 +148,14 @@ if __name__ == '__main__':
     else:
         train_data = TensorDataset(torch.from_numpy(train_images), torch.from_numpy(train_labels).type(torch.long))
 
-    # perchè ho rifatto solo i train con data augmentation e quindi come tensori     
+    # perchè ho rifatto solo i train con data augmentation e quindi come tensori
     val_data = TensorDataset(torch.from_numpy(valid_images), torch.from_numpy(valid_labels).type(torch.long))
 
     train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
     validation_loader = DataLoader(val_data, shuffle=False, batch_size=batch_size, drop_last=True)
 
     # Optimizer def
-    optimizer = torch.optim.Adam(net.parameters(), lr=lr)  # weight_decay=wd
+    optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=wd)
 
     # Loss def
     if int(args.loss_weights) == 1:
