@@ -14,8 +14,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import itertools
 import sklearn.metrics
-from PIL import Image
-import torchvision.transforms as transforms
 
 
 def plot_confusion_matrix(cm, classes, step, exp, normalize=False, title='Confusion matrix', cmap=plt.cm.Blues):
@@ -84,6 +82,14 @@ if __name__ == '__main__':
     parser.add_argument("--data_aug", dest="data_aug", default=0,
                         help="1 to use augmented data, 0 otherwise. set to 1 if you pass train data with augmentation")
 
+    parser.add_argument("--scheduling", dest="scheduling", default=0,
+                        help="1 if scheduling lr policy applied, 0 otherwise")
+    parser.add_argument("--pct_start", dest="pct_start", default=0.05,
+                        help="% of the cycle (in number of steps) spent increasing the learning rate")
+    parser.add_argument("--anneal_strategy", dest="anneal_strategy", default='linear',
+                        help="{‘cos’, ‘linear’} specifies the annealing strategy: “cos” for cosine annealing, "
+                             "“linear” for linear annealing")
+
 
     args = parser.parse_args()
 
@@ -93,6 +99,7 @@ if __name__ == '__main__':
     lr = float(args.lr)
     wd = float(args.weight_decay)
     labelling = int(args.labelling)
+    sched = int(args.scheduling)
 
     device = 'cuda:' + str(args.device) if torch.cuda.is_available() else 'cpu'
     print("Device name: ", device, torch.cuda.get_device_name(int(args.device)))
@@ -120,7 +127,8 @@ if __name__ == '__main__':
         "num_classes": num_classes,
         "loss_weights": int(args.loss_weights),
         "weight_decay": wd,
-        "drop_val": float(args.drop_val)
+        "drop_val": float(args.drop_val),
+        "scheduling": sched
     }
 
     experiment.log_parameters(hyper_params)
@@ -156,6 +164,14 @@ if __name__ == '__main__':
 
     # Optimizer def
     optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=wd)
+
+    # Scheduling lr
+    if sched == 1:
+        print("Scheduling of learning rate applied")
+        # Scheduler def
+        scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer=optimizer, max_lr=lr, pct_start=float(args.pct_start),
+                                                        total_steps=len(train_loader) * num_epochs,
+                                                        anneal_strategy=args.anneal_strategy)
 
     # Loss def
     if int(args.loss_weights) == 1:
@@ -223,6 +239,14 @@ if __name__ == '__main__':
 
             # update weights
             optimizer.step()
+
+            rl = optimizer.param_groups[0]["lr"]
+
+            if sched == 1:
+                scheduler.step()
+
+        if sched == 1:
+            experiment.log_metric('learning_rate_epoch', rl, step=epoch + 1)  # the last batch learning rate
 
         # Validation step
         print()
